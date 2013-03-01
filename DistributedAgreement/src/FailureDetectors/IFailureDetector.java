@@ -1,5 +1,5 @@
 package FailureDetectors;
-interface IFailureDetector {
+public interface IFailureDetector {
 	
     /* Initiates communication tasks, e.g. sending heartbeats periodically */
     void begin ();

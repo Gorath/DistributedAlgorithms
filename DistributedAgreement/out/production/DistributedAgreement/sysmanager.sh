@@ -128,7 +128,7 @@ case ${C} in
 	[ -d "$PIDDIR" ] || mkdir -p $PIDDIR
 	
 	# To begin with, start NameServer
-	daemonize "P0" java FailureDetectors/Registrar $N
+	daemonize "P0" java Registrar $N
 	
 	start $@ ;;
 	"stop" )

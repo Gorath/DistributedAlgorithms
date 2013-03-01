@@ -1,7 +1,7 @@
 package FailureDetectors;
 import java.lang.Math;
 
-class Broadcaster extends Process {
+public class Broadcaster extends Process {
 	
     private long times, count = 0;
 	

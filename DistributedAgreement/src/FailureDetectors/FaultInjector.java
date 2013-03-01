@@ -3,7 +3,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-class FaultInjector {
+public class FaultInjector {
 	
     public static void main (String [] args) {
 		

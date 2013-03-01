@@ -25,6 +25,11 @@ public class Utils {
     /* For measurement purposes */
     public static final long STEP = 100;
     public static final long MAX  = 2000;
+
+
+    /* Message types */
+    public static String HEARTBEAT       = "Heartbeat";
+    public static String HEARTBEAT_REPLY = "Heartbeat-reply";
 	
     public static synchronized void out (String s) {
 		

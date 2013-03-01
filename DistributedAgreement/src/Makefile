@@ -1,12 +1,14 @@
 JC = javac
 SRCDIR = src
 BINDIR = bin
-JFLAGS = -g:none
+JFLAGS = -g
 .SUFFIXES: .java .class
 .java.class:
-	@$(JC) $(JFLAGS) $*.java
-CLASSES = $(wildcard *.java)
+	@$(JC) $(JFLAGS) FailureDetectors/*.java
+	@$(JC) $(JFLAGS) FailureDetectors/PerfectFailureDetector/*.java
+JAVAS = $(wildcard FailureDetectors/*.java FailureDetectors/PerfectFailureDetector/*.java)
+CLASSES = $(wildcard FailureDetectors/*.class FailureDetectors/PerfectFailureDetector/*.class)
 default: classes
-classes: $(CLASSES:.java=.class)
+classes: $(JAVAS:.java=.class)
 clean:
-	$(RM) *.class
+	./clean.sh

@@ -3,7 +3,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-class Process {
+public class Process {
 	
     private String name; /* A triptych that identifies a process p */
     private String host;
