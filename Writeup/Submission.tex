@@ -1,0 +1,84 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{lipsum}
+\usepackage{changepage}
+
+
+\begin{document}
+
+\title{Distributed Algorithms Coursework}
+\author{Gareth Jones \& Osama Javed}
+
+\maketitle
+
+\begin{abstract}
+The following document contains the writeup for our Distributed Algorithms Coursework which focuses on {\em faliure detectors} - specifically in an {\em asynchronous} or {\em partially synchronous} message-passing system with crash faliures.
+\end{abstract}
+
+\newpage
+
+\section{Faliure Detectors}
+
+A {\em faliure detector} is a module that provides to each process a collection of {\em suspected} processes.  Detectors in different process may not agree on which processes are suspected.
+
+\subsection{Degrees of Completeness}
+
+{\bf Strong Completeness}\\ 
+\begin{adjustwidth}{0.5cm}{}
+Every faulty process is eventually permanently suspected by every non-faulty process
+\end{adjustwidth}
+\vspace{3mm}
+
+\noindent
+Weak Completeness\\
+\indent 
+Every faulty process is eventually permanently suspected by some non-faulty process
+
+
+\subsection{Degrees of Accuracy}
+
+Strong accuracy - No process is suspected (by anybody) before it crashes
+Weak accuracy Some non-faulty process is never suspected
+
+Eventual Strong Accuracy - After some initial period of confusion, no process is suspected before it crashes.  This means no non-faulty process is suspected after some time, since we can take the end of the initial period of chasos as the time at which the last crash occcurs.
+
+Evenrtual weak accuracy - After some initial period of confuasion, some non-faulty process is never suspected.
+
+\subsection{Faliure Detector Classes}
+
+Perfect Detector\\
+    Strongly complete and strongly accurate: non-faulty processes are never suspected; faulty processes are eventually suspected by everybody. Easily achieved in synchronous systems.\\ 
+    
+Strong detector\\
+    Strongly complete and weakly accurate. The name is misleading if we've already forgotten about weak completeness, but the corresponding W (weak) class is only weakly complete and weakly accurate, so it's the strong completeness that the S is referring to. \\
+    
+Eventually Perfect\\
+    Strongly complete and eventually strongly accurate. \\
+    
+Eventually Strong\\
+    Strongly complete and eventually weakly accurate.\\
+
+\newpage
+
+%\subsection{Crap}
+%\begin{equation}
+%    \label{simple_equation}
+%    \alpha = \sqrt{ \beta }
+%\end{equation}
+
+%\subsection{Subsection Heading Here}
+%Write your subsection text here.
+
+%\begin{figure}
+%    \centering
+%    \includegraphics[width=3.0in]{myfigure}
+%    \caption{Simulation Results}
+%    \label{simulationfigure}
+%\end{figure}
+
+%\section{Conclusion}
+%Write your conclusion here.
+
+\end{document}
+
+
