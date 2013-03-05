@@ -8,6 +8,8 @@ import java.util.*;
 
 public class PerfectFailureDetector implements IFailureDetector {
     
+
+
     // The process this failure detector belongs to
     Process p;
     
@@ -15,8 +17,8 @@ public class PerfectFailureDetector implements IFailureDetector {
     private Timer t;
 
     // List to store suspected processes
-    private List<Integer> suspectedProcesses;
-    private List<Integer> successfulReplies;
+    private Integer[] suspectedProcesses;
+    private Integer[] successfulReplies;
     
 
     //The time for the last heartbeat
@@ -32,8 +34,8 @@ public class PerfectFailureDetector implements IFailureDetector {
     public PerfectFailureDetector(Process p){
 	this.p = p;
 	t = new Timer();
-	suspectedProcesses = new ArrayList<Integer>(Utils.MAX_NUM_OF_PROCESSES);
-	successfulReplies  = new ArrayList<Integer>(Utils.MAX_NUM_OF_PROCESSES);
+	suspectedProcesses = new Integer[p.getNo()];
+	successfulReplies  = new Integer[p.getNo()];
     }
     	
     /* Initiates communication tasks, e.g. sending heartbeats periodically */
@@ -51,10 +53,9 @@ public class PerfectFailureDetector implements IFailureDetector {
 	// Get the process ID from the message
 	int processID = m.getSource();
 	
-
 	//if this process was suspected .. remove it from suspects since we recieved a message
-	 if (suspectedProcesses.contains(processID)) {
-	     suspectedProcesses.remove(suspectedProcesses.indexOf(processID));
+	 if (suspectedProcesses[processID-1]!= null) {
+	     suspectedProcesses[processID-1] = null;
 	     Utils.out(p.pid,"Process " + processID + " has recovered.");
 	 }
 
@@ -62,20 +63,15 @@ public class PerfectFailureDetector implements IFailureDetector {
         if (lastHeartbeat + 2*Utils.DELAY > System.currentTimeMillis()){
          
             // Make note that this process is still active
-            successfulReplies.add(processID);
+            successfulReplies[processID-1] = processID;
 
-            // If this process is suspected but has recovered remove it from the suspected list
-	    if (suspectedProcesses.contains(processID)) {
-		suspectedProcesses.remove(processID);
-		Utils.out(p.pid,"Process " + processID + " has recovered.");
-	    }
-        }
+	}
 
     }
 	
     /* Returns true if ‘process’ is suspected */
     public boolean isSuspect(Integer process){
-    	return suspectedProcesses.contains(process);
+    	return suspectedProcesses[process-1] != null;
     }
 	
     /* Returns the next leader of the system; used only for §2.1.2.
@@ -97,22 +93,26 @@ public class PerfectFailureDetector implements IFailureDetector {
             
             // If we have a list of replies from a previous repetition
             // calculate suspected processes
-            synchronized (suspectedProcesses) {
-                if (lastHeartbeat != 0) {
-                    for(int i = 0; i <= p.getNo(); i++) {
-                        if (i != 0 && i != p.pid) {
-                            if (!successfulReplies.contains(i)) {
-                                Utils.out(p.pid,"Process " + i + " is now suspected.. bastard..");
-                                suspectedProcesses.add(i);
-			    }
-                        }
-                    }
-                    successfulReplies.clear();
-                }
-            }
+	    if (lastHeartbeat != 0) {
+
+		for(int i = 0; i <= p.getNo(); i++) {
+		    if (i != 0 && i != p.pid) {
+			if (successfulReplies[i-1] == null) {
+			    Utils.out(p.pid,"Process " + i + " is now suspected");
+			    suspectedProcesses[i-1] = i;
+			}
+			 //clear the slot for next time
+			successfulReplies[i-1] = null;
+
+		    }
+		}
+
+	    }
+            
 
             lastHeartbeat = System.currentTimeMillis();
-	    p.broadcast(Utils.HEARTBEAT,"null");
+	    //Utils.out(p.pid,""+lastHeartbeat);
+	    p.broadcast(Utils.HEARTBEAT,null);
 	    
 	}
     }

@@ -6,17 +6,18 @@ import FailureDetectors.Utils;
 
 public class EPFDProcess extends Process{
 
-    PerfectFailureDetector faliureDetector;
-	
+    EventuallyPerfectFailureDetector faliureDetector;
+    final int n;
 	/**
 	 * PDFProcess constructor
 	 * @param name - the name of the process
 	 * @param pid  - the unique ID of the process
 	 * @param n    - the total number of processes
 	 */
-    public PFDProcess( String name , int pid , int n){
+    public EPFDProcess( String name , int pid , int n){
     	super(name,pid,n);
-    	faliureDetector = new PerfectFailureDetector(this);
+	this.n = n;
+    	faliureDetector = new EventuallyPerfectFailureDetector(this);
     }
     
     public void begin() {
@@ -35,7 +36,7 @@ public class EPFDProcess extends Process{
     }
 
     public static void main(String[] args) {
-        PFDProcess p1 = new PFDProcess(args[0],Integer.parseInt(args[1]),Integer.parseInt(args[2]));
+        EPFDProcess p1 = new EPFDProcess(args[0],Integer.parseInt(args[1]),Integer.parseInt(args[2]));
         p1.registeR();
         p1.begin();
     }
