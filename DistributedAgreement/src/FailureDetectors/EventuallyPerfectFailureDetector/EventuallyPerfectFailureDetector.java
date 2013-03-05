@@ -1,4 +1,4 @@
-package FailureDetectors.PerfectFailureDetector;
+package FailureDetectors.EventuallyPerfectFailureDetector;
 import FailureDetectors.*;
 import FailureDetectors.Process;
 
@@ -6,7 +6,7 @@ import java.util.*;
 
 
 
-public class PerfectFailureDetector implements IFailureDetector {
+public class EventuallyPerfectFailureDetector implements IFailureDetector {
     
     // The process this failure detector belongs to
     Process p;

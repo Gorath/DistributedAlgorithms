@@ -1,10 +1,10 @@
-package FailureDetectors.PerfectFailureDetector;
+package FailureDetectors.EventuallyPerfectFailureDetector;
 import FailureDetectors.Message;
 import FailureDetectors.Process;
 import FailureDetectors.Utils;
 
 
-public class PFDProcess extends Process{
+public class EPFDProcess extends Process{
 
     PerfectFailureDetector faliureDetector;
 	

@@ -6,9 +6,12 @@ JFLAGS = -g
 .java.class:
 	@$(JC) $(JFLAGS) FailureDetectors/*.java
 	@$(JC) $(JFLAGS) FailureDetectors/PerfectFailureDetector/*.java
+	@$(JC) $(JFLAGS) FailureDetectors/EventuallyPerfectFailureDetector/*.java
 JAVAS = $(wildcard FailureDetectors/*.java FailureDetectors/PerfectFailureDetector/*.java)
 CLASSES = $(wildcard FailureDetectors/*.class FailureDetectors/PerfectFailureDetector/*.class)
 default: classes
 classes: $(JAVAS:.java=.class)
 clean:
 	./clean.sh
+	rm -f *.out
+	rm -f *.err
