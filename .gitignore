@@ -1,4 +1,10 @@
 .metadata/
 DistributedAgreement/.idea/misc.xml
 DistributedAgreement/.idea/workspace.xml
+*.class
+*.out
+*.err
+out
+bin
+*.xml
 
