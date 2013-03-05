@@ -7,17 +7,15 @@ import FailureDetectors.Utils;
 public class EPFDProcess extends Process{
 
     EventuallyPerfectFailureDetector faliureDetector;
-    final int n;
-	/**
-	 * PDFProcess constructor
-	 * @param name - the name of the process
-	 * @param pid  - the unique ID of the process
-	 * @param n    - the total number of processes
-	 */
+    /**
+     * PDFProcess constructor
+     * @param name - the name of the process
+     * @param pid  - the unique ID of the process
+     * @param n    - the total number of processes
+     */
     public EPFDProcess( String name , int pid , int n){
     	super(name,pid,n);
-	this.n = n;
-    	faliureDetector = new EventuallyPerfectFailureDetector(this);
+	faliureDetector = new EventuallyPerfectFailureDetector(this);
     }
     
     public void begin() {
@@ -25,15 +23,15 @@ public class EPFDProcess extends Process{
     }
 
     @Override
-    public synchronized void receive(Message m) {
-        String type = m.getType();
-        if (type.equals(Utils.HEARTBEAT)) {
-            faliureDetector.receive(m);
-            //unicast(new Message(pid, m.getSource(), Utils.HEARTBEAT_REPLY+System , "null"));
-	}// else if (type.equals(Utils.HEARTBEAT_REPLY)) {
-	// faliureDetector.receive(m);
-        //}
-    }
+	public synchronized void receive(Message m) {
+	    String type = m.getType();
+	    if (type.equals(Utils.HEARTBEAT)) {
+		faliureDetector.receive(m);
+		//unicast(new Message(pid, m.getSource(), Utils.HEARTBEAT_REPLY+System , "null"));
+	    }// else if (type.equals(Utils.HEARTBEAT_REPLY)) {
+	    // faliureDetector.receive(m);
+	    //}
+	}
 
     public static void main(String[] args) {
         EPFDProcess p1 = new EPFDProcess(args[0],Integer.parseInt(args[1]),Integer.parseInt(args[2]));

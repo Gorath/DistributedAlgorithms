@@ -17,8 +17,8 @@ public class PerfectFailureDetector implements IFailureDetector {
     private Timer t;
 
     // List to store suspected processes
-    private Integer[] suspectedProcesses;
-    private Integer[] successfulReplies;
+    private boolean[] suspectedProcesses;
+    private boolean[] successfulReplies;
     
 
     //The time for the last heartbeat
@@ -34,8 +34,9 @@ public class PerfectFailureDetector implements IFailureDetector {
     public PerfectFailureDetector(Process p){
 	this.p = p;
 	t = new Timer();
-	suspectedProcesses = new Integer[p.getNo()];
-	successfulReplies  = new Integer[p.getNo()];
+	int n = p.getNo();
+	suspectedProcesses = new boolean[n];
+	successfulReplies  = new boolean[n];
     }
     	
     /* Initiates communication tasks, e.g. sending heartbeats periodically */
@@ -54,8 +55,8 @@ public class PerfectFailureDetector implements IFailureDetector {
 	int processID = m.getSource();
 	
 	//if this process was suspected .. remove it from suspects since we recieved a message
-	 if (suspectedProcesses[processID-1]!= null) {
-	     suspectedProcesses[processID-1] = null;
+	 if (suspectedProcesses[processID-1]) {
+	     suspectedProcesses[processID-1] = false;
 	     Utils.out(p.pid,"Process " + processID + " has recovered.");
 	 }
 
@@ -63,7 +64,7 @@ public class PerfectFailureDetector implements IFailureDetector {
         if (lastHeartbeat + 2*Utils.DELAY > System.currentTimeMillis()){
          
             // Make note that this process is still active
-            successfulReplies[processID-1] = processID;
+            successfulReplies[processID-1] = true;
 
 	}
 
@@ -71,7 +72,7 @@ public class PerfectFailureDetector implements IFailureDetector {
 	
     /* Returns true if ‘process’ is suspected */
     public boolean isSuspect(Integer process){
-    	return suspectedProcesses[process-1] != null;
+    	return suspectedProcesses[process-1];
     }
 	
     /* Returns the next leader of the system; used only for §2.1.2.
@@ -97,12 +98,12 @@ public class PerfectFailureDetector implements IFailureDetector {
 
 		for(int i = 0; i <= p.getNo(); i++) {
 		    if (i != 0 && i != p.pid) {
-			if (successfulReplies[i-1] == null) {
+			if (!successfulReplies[i-1]) {
 			    Utils.out(p.pid,"Process " + i + " is now suspected");
-			    suspectedProcesses[i-1] = i;
+			    suspectedProcesses[i-1] = true;
 			}
 			 //clear the slot for next time
-			successfulReplies[i-1] = null;
+			successfulReplies[i-1] = false;
 
 		    }
 		}
