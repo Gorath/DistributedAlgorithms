@@ -1,4 +1,5 @@
-package FailureDetectors.EventuallyPerfectFailureDetector;
+package FailureDetectors.LeaderElector;
+import FailureDetectors.EventuallyPerfectFailureDetector;
 import FailureDetectors.*;
 import FailureDetectors.Process;
 
@@ -6,10 +7,8 @@ import java.util.*;
 
 
 
-public class EventuallyPerfectFailureDetector implements IFailureDetector {
+public class EventuallyLeaderElector extends EventuallyPerfectFailureDetector {
     
-
-
     // The process this failure detector belongs to
     Process p;
     
@@ -54,16 +53,16 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
 	    missingMessageIDs[i] = new TreeSet<Integer>();
 	}
     }
-    	
+    
     /* Initiates communication tasks, e.g. sending heartbeats periodically */
     public void begin (){
-    	t.schedule(new PeriodicTask(),0,interval);
+	t.schedule(new PeriodicTask(),0,interval);
     }
 
 
     /* Handles in-coming (heartbeat) messages */
     @Override
-	public void receive(Message m){
+    public void receive(Message m){
 	
 	// Get the process ID from the message
 	int processID = m.getSource();
@@ -98,18 +97,18 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
 	if (processTree == null) return;  
 
 	if (highestMessageIDRecieved[processID-1] + 1 == heartbeatID ) {
-	// Case where we receive the next message we expect to receive
+	    // Case where we receive the next message we expect to receive
 	    highestMessageIDRecieved[processID-1]++;
 
 	} else if (highestMessageIDRecieved[processID-1] + 1 > heartbeatID) {
-	    // This is the case where we have previously missed this ID and it has	 
+	    // This is the case where we have previously missed this ID and it has 
 	    // come in late
 	    if (processTree.contains(heartbeatID)) {
-		    processTree.remove(heartbeatID);
+		processTree.remove(heartbeatID);
 	    } else {
 		Utils.out(p.pid, "Error removing heartbeat from tree");
 	    }
-	    
+	        
 	} else {
 	    // this is the case where we receive a message ID greater than the one we expect
 	    for (int i = highestMessageIDRecieved[processID-1] + 1; i < heartbeatID; i++) {
@@ -118,7 +117,7 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
 
 	    if (processTree.size() > TOLERANCE) {
 		missingMessageIDs[processID-1] = null;
-		 Utils.out(p.pid, "Process now permanently suspected" + processID);
+		Utils.out(p.pid, "Process now permanently suspected" + processID);
 	    }
 
 	    highestMessageIDRecieved[processID-1] = heartbeatID;
@@ -126,22 +125,22 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
 
 
     }
-	
+    
     /* Returns true if ‘process’ is suspected */
     public boolean isSuspect(Integer process){
-    	return missingMessageIDs[process-1] == null  // case where permanently suspected because of out of order replies
+	return missingMessageIDs[process-1] == null  // case where permanently suspected because of out of order replies
 	    || suspectedProcesses[process-1] // case where longer delay causes suspision - can be recovered still 
 	    || missingMessageIDs[process-1].size() > 0; // case where we are missing heartbeat replies still so can't be assumed correct
     }
-	
+    
     /* Returns the next leader of the system; used only for §2.1.2.
      * Or, it should also be used to notify a process if the leader
      * changed.
      */
     public int getLeader(){
-    	return 0;
+	return 0;
     }
-	
+    
     /* Notifies a blocking thread that ‘process’ has been suspected. 
      * Used only for tasks in §2.1.3 */
     public void isSuspected(Integer process){
@@ -184,4 +183,4 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
 	}
     }
     
-}
+} 
