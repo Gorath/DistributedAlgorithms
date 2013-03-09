@@ -27,12 +27,12 @@ public class PFDProcess extends Process{
     @Override
     public synchronized void receive(Message m) {
         String type = m.getType();
+
         if (type.equals(Utils.HEARTBEAT)) {
-            faliureDetector.receive(m);
-            //unicast(new Message(pid, m.getSource(), Utils.HEARTBEAT_REPLY+System , "null"));
-	}// else if (type.equals(Utils.HEARTBEAT_REPLY)) {
-	// faliureDetector.receive(m);
-        //}
+            unicast(new Message(pid, m.getSource(), Utils.HEARTBEAT_REPLY, m.getPayload()));
+	} else if (type.equals(Utils.HEARTBEAT_REPLY)) {
+	    faliureDetector.receive(m);	  
+        }
     }
 
     public static void main(String[] args) {

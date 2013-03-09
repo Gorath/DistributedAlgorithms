@@ -21,8 +21,14 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
     private boolean[] successfulReplies;
     private long[] maxDelays;
 
-    //The time for the last heartbeat
-    private long lastHeartbeat = 0;
+    private boolean started;
+    private TreeSet<Integer>[] missingMessageIDs;
+    private int[] highestMessageIDRecieved;
+    private int messageID = 1;
+
+    // If this amount of messages are missed by a process we
+    // permanently suspect it
+    private static final int TOLERANCE = 50;
 
     // The interval to send heartbeat messages at
     private static final int interval = 1000;
@@ -38,10 +44,14 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
 	suspectedProcesses = new boolean[n];
 	successfulReplies  = new boolean[n];
 	maxDelays  = new long[n];
-	
+	missingMessageIDs = new TreeSet[n];
+	highestMessageIDRecieved = new int[n];
+	started = false;
+
 	//initially all processes have delay as utils.Delay
 	for(int i = 0; i < n ; i ++){
 	    maxDelays[i] = Utils.DELAY;
+	    missingMessageIDs[i] = new TreeSet<Integer>();
 	}
     }
     	
@@ -54,31 +64,63 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
     /* Handles in-coming (heartbeat) messages */
     @Override
 	public void receive(Message m){
-    	//Utils.out(p.pid, m.toString());
-	
 	
 	// Get the process ID from the message
 	int processID = m.getSource();
-	long delay = System.currentTimeMillis() - Long.parseLong(m.getPayload());
 	
-	
+	String[] messageParts =  m.getPayload().split(Utils.SEPARATOR);
 
-	//if this process was suspected .. remove it from suspects since we recieved a message
-	if (suspectedProcesses[processID-1]) {
-	    suspectedProcesses[processID-1] = false;
-	    Utils.out(p.pid,"Process " + processID + " has recovered.");
-	}
+	// Get payload information for  heartbeat ID and when heartbeat was sent
+	int heartbeatID = Integer.parseInt(messageParts[0]);
+	long heartbeatTime =  Long.parseLong(messageParts[1]);
+
+	// Calculate the delay for the message
+	long delay = System.currentTimeMillis() - heartbeatTime;
 
         // If this heartbeat is received in the correct time period
-        if (lastHeartbeat + maxDelays[processID-1] +1 > System.currentTimeMillis()){
+	if ( heartbeatTime + maxDelays[processID-1] >= System.currentTimeMillis()){
          
             // Make note that this process is still active
             successfulReplies[processID-1] = true;
 
 	}
-	
-	maxDelays[processID -1 ] = Math.max(maxDelays[processID-1],delay);
-	Utils.out(p.pid,"process "+ processID+ " delay " + delay + "max " + maxDelays[processID -1]);
+
+
+	TreeSet<Integer> processTree = missingMessageIDs[processID-1];
+
+	// If processTree is null then this is permanently suspected 
+	if (processTree == null) return;  
+
+	if (highestMessageIDRecieved[processID-1] + 1 == heartbeatID ) {
+	// Case where we receive the next message we expect to receive
+	    highestMessageIDRecieved[processID-1]++;
+
+	} else if (highestMessageIDRecieved[processID-1] + 1 > heartbeatID) {
+	    // This is the case where we have previously missed this ID and it has	 
+	    // come in late
+	    if (processTree.contains(heartbeatID)) {
+		    processTree.remove(heartbeatID);
+	    } else {
+		Utils.out(p.pid, "Error removing heartbeat from tree");
+	    }
+
+	} else {
+	    // this is the case where we receive a message ID greater than the one we expect
+	    for (int i = highestMessageIDRecieved[processID-1] + 1; i < heartbeatID; i++) {
+		processTree.add(i);
+	    } 
+
+	    if (processTree.size() > TOLERANCE) {
+		missingMessageIDs[processID-1] = null;
+		
+	    }
+
+	    highestMessageIDRecieved[processID-1] = heartbeatID;
+	}
+
+
+	maxDelays[processID -1] = Math.max(maxDelays[processID-1],delay);
+	Utils.out(p.pid,"Reply process " + processID + " delay " + delay + " max " + maxDelays[processID -1]);
     }
 	
     /* Returns true if ‘process’ is suspected */
@@ -105,7 +147,7 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
             
             // If we have a list of replies from a previous repetition
             // calculate suspected processes
-	    if (lastHeartbeat != 0) {
+	    if (started) {
 
 		for(int i = 0; i <= p.getNo(); i++) {
 		    if (i != 0 && i != p.pid) {
@@ -121,11 +163,13 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
 
 	    }
             
+	    started = true;
 
-            lastHeartbeat = System.currentTimeMillis();
+            long lastHeartbeat = System.currentTimeMillis();
 	    //Utils.out(p.pid,""+lastHeartbeat);
-	    p.broadcast(Utils.HEARTBEAT,""+lastHeartbeat);
+	    p.broadcast(Utils.HEARTBEAT,messageID + Utils.SEPARATOR +lastHeartbeat);
 	    
+	    messageID++;
 	}
     }
     

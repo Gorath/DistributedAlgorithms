@@ -19,10 +19,10 @@ public class PerfectFailureDetector implements IFailureDetector {
     // List to store suspected processes
     private boolean[] suspectedProcesses;
     private boolean[] successfulReplies;
-    
 
     //The time for the last heartbeat
     private long lastHeartbeat = 0;
+    private long req_number = 0;
 
     // The interval to send heartbeat messages at
     private static final int interval = 1000;
@@ -53,19 +53,16 @@ public class PerfectFailureDetector implements IFailureDetector {
 	
 	// Get the process ID from the message
 	int processID = m.getSource();
-	
-	//if this process was suspected .. remove it from suspects since we recieved a message
-	 if (suspectedProcesses[processID-1]) {
-	     suspectedProcesses[processID-1] = false;
-	     Utils.out(p.pid,"Process " + processID + " has recovered.");
-	 }
+
+	// Extract the information out of the payload
+	long heartbeatTime = Long.parseLong(m.getPayload());
+
+	//Utils.out(p.pid, "Received heartbeat reply from at time " + (System.currentTimeMillis() - heartbeatTime));
 
         // If this heartbeat is received in the correct time period
-        if (lastHeartbeat + 2*Utils.DELAY > System.currentTimeMillis()){
-         
+        if (heartbeatTime + 1.1*Utils.DELAY + interval > System.currentTimeMillis()){
             // Make note that this process is still active
             successfulReplies[processID-1] = true;
-
 	}
 
     }
@@ -113,7 +110,7 @@ public class PerfectFailureDetector implements IFailureDetector {
 
             lastHeartbeat = System.currentTimeMillis();
 	    //Utils.out(p.pid,""+lastHeartbeat);
-	    p.broadcast(Utils.HEARTBEAT,null);
+	    p.broadcast(Utils.HEARTBEAT,"" + lastHeartbeat);
 	    
 	}
     }
