@@ -11,7 +11,7 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
 
 
     // The process this failure detector belongs to
-    Process p;
+    public Process p;
     
     // A timer that updates suspected processes
     private Timer t;
@@ -83,6 +83,12 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
             // Make note that this process is still active
             successfulReplies[processID-1] = true;
 
+	    //if this process was previously suspected .. unsuspect it
+	    if (suspectedProcesses[processID-1] ){
+		suspectedProcesses[processID-1] = false;
+		getLeader();
+	    } 
+
 	}
 
 	TreeSet<Integer> processTree = missingMessageIDs[processID-1];
@@ -92,7 +98,7 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
 	// still arrive in order).  This implies that even if a process is 
 	// 50 times slower than the rest we will still consider it correct
 	maxDelays[processID -1] = Math.max(maxDelays[processID-1],delay);
-	Utils.out(p.pid,"Reply process " + processID + " delay " + delay + " max " + maxDelays[processID -1]);
+	//Utils.out(p.pid,"Reply process " + processID + " delay " + delay + " max " + maxDelays[processID -1]);
 
 	// If processTree is null then this is permanently suspected 
 	if (processTree == null) return;  
@@ -118,7 +124,8 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
 
 	    if (processTree.size() > TOLERANCE) {
 		missingMessageIDs[processID-1] = null;
-		 Utils.out(p.pid, "Process now permanently suspected" + processID);
+		getLeader();
+		Utils.out(p.pid, "Process now permanently suspected" + processID);
 	    }
 
 	    highestMessageIDRecieved[processID-1] = heartbeatID;
@@ -151,15 +158,17 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
     class PeriodicTask extends TimerTask{
 	public void run(){
             
+
+	    boolean suspected = false ;
             // If we have a list of replies from a previous repetition
             // calculate suspected processes
 	    if (started) {
 
 		for(int i = 0; i <= p.getNo(); i++) {
 		    if (i != 0 && i != p.pid) {
-			if (!successfulReplies[i-1] ) {
-			    Utils.out(p.pid,"Process " + i + " is now suspected");
-			    suspectedProcesses[i-1] = true;
+			if (!successfulReplies[i-1] && !suspectedProcesses[i-1] ) {
+			    //Utils.out(p.pid,"Process " + i + " is now suspected");
+			    suspected = suspectedProcesses[i-1] = true;
 			}
 			//clear the slot for next time
 			successfulReplies[i-1] = false;
@@ -167,11 +176,18 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
 			if (missingMessageIDs[i-1] != null 
 			    && missingMessageIDs[i-1].size() > TOLERANCE) {
 			    missingMessageIDs[i-1] = null;
+			    suspected = true;
 			}
 
 		    }
 		}
-
+	       
+		//if some process has been suspected .. call getLeader so that 
+		//a new leader can be chosen
+		if (suspected){
+		    getLeader();
+		}
+		    
 	    }
             
 	    started = true;

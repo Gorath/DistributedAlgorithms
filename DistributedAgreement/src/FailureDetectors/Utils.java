@@ -30,7 +30,7 @@ public class Utils {
     /* Message types */
     public static String HEARTBEAT       = "Heartbeat";
     public static String HEARTBEAT_REPLY = "Heartbeat-reply";
-    public static String LEADER_MESSAGE = "LE-msg"
+    public static String LEADER_MESSAGE = "LE-msg";
     public static synchronized void out (String s) {
 		
 	if (DEBUG) {

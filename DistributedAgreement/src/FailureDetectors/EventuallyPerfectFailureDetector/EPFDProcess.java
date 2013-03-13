@@ -2,11 +2,11 @@ package FailureDetectors.EventuallyPerfectFailureDetector;
 import FailureDetectors.Message;
 import FailureDetectors.Process;
 import FailureDetectors.Utils;
-
+import FailureDetectors.IFailureDetector;
 
 public class EPFDProcess extends Process{
 
-    EventuallyPerfectFailureDetector faliureDetector;
+    public IFailureDetector faliureDetector;
     /**
      * PDFProcess constructor
      * @param name - the name of the process
