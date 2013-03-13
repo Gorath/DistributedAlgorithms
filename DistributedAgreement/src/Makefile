@@ -1,7 +1,7 @@
 JC = javac
 SRCDIR = src
 BINDIR = bin
-JFLAGS = -g
+JFLAGS = -g -Xlint:unchecked
 .SUFFIXES: .java .class
 .java.class:
 	@$(JC) $(JFLAGS) FailureDetectors/*.java

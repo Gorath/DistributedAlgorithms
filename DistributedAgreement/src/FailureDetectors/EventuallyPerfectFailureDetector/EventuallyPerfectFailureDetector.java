@@ -68,17 +68,25 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
 	// Get the process ID from the message
 	int processID = m.getSource();
 	
+	long time =  System.currentTimeMillis();
+	
 	String[] messageParts =  m.getPayload().split(" ");
-
+	
+	
 	// Get payload information for  heartbeat ID and when heartbeat was sent
 	int heartbeatID = Integer.parseInt(messageParts[0]);
 	long heartbeatTime =  Long.parseLong(messageParts[1]);
+	int messageSource = Integer.parseInt(messageParts[2]);
 
+	if (messageSource != p.pid){ //this message was not meant for us.
+	    return;
+	}
+	
 	// Calculate the delay for the message
-	long delay = System.currentTimeMillis() - heartbeatTime;
+	long delay = time- heartbeatTime;
 
         // If this heartbeat is received in the correct time period
-	if ( heartbeatTime + maxDelays[processID-1] >= System.currentTimeMillis()){
+	if ( heartbeatTime + maxDelays[processID-1] >= time){
          
             // Make note that this process is still active
             successfulReplies[processID-1] = true;
@@ -98,7 +106,7 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
 	// still arrive in order).  This implies that even if a process is 
 	// 50 times slower than the rest we will still consider it correct
 	maxDelays[processID -1] = Math.max(maxDelays[processID-1],delay);
-	//Utils.out(p.pid,"Reply process " + processID + " delay " + delay + " max " + maxDelays[processID -1]);
+	Utils.out(p.pid,"Reply process " + processID + " delay " + delay + " max " + maxDelays[processID -1]);
 
 	// If processTree is null then this is permanently suspected 
 	if (processTree == null) return;  
@@ -163,7 +171,7 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
             // If we have a list of replies from a previous repetition
             // calculate suspected processes
 	    if (started) {
-
+		
 		for(int i = 0; i <= p.getNo(); i++) {
 		    if (i != 0 && i != p.pid) {
 			if (!successfulReplies[i-1] && !suspectedProcesses[i-1] ) {
