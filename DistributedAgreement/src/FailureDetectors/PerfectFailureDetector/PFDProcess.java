@@ -2,12 +2,12 @@ package FailureDetectors.PerfectFailureDetector;
 import FailureDetectors.Message;
 import FailureDetectors.Process;
 import FailureDetectors.Utils;
-
+import FailureDetectors.*;
 
 public class PFDProcess extends Process{
     
 
-    PerfectFailureDetector faliureDetector;
+    public IFailureDetector faliureDetector;
 	
 	/**
 	 * PDFProcess constructor
@@ -19,6 +19,7 @@ public class PFDProcess extends Process{
     	super(name,pid,n);
     	faliureDetector = new PerfectFailureDetector(this);
     }
+
     
     public void begin() {
     	faliureDetector.begin();

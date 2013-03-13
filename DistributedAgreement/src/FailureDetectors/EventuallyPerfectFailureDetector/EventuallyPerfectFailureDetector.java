@@ -76,11 +76,12 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
 	// Get payload information for  heartbeat ID and when heartbeat was sent
 	int heartbeatID = Integer.parseInt(messageParts[0]);
 	long heartbeatTime =  Long.parseLong(messageParts[1]);
-	int messageSource = Integer.parseInt(messageParts[2]);
+	// int messageSource = Integer.parseInt(messageParts[2]);
 
-	if (messageSource != p.pid){ //this message was not meant for us.
-	    return;
-	}
+	// if (messageSource != p.pid){ //this message was not meant for us.
+	//     Utils.out(p.pid, "dumped " + messageSource );
+	//     return;
+	//}
 	
 	// Calculate the delay for the message
 	long delay = time- heartbeatTime;

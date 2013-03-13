@@ -11,7 +11,7 @@ public class PerfectFailureDetector implements IFailureDetector {
 
 
     // The process this failure detector belongs to
-    Process p;
+    public Process p;
     
     // A timer that updates suspected processes
     private Timer t;
@@ -80,10 +80,12 @@ public class PerfectFailureDetector implements IFailureDetector {
     	return 0;
     }
 	
+
+    
     /* Notifies a blocking thread that ‘process’ has been suspected. 
      * Used only for tasks in §2.1.3 */
     public void isSuspected(Integer process){
-	
+	Utils.out(p.pid,"fuck me");
     }
 
     class PeriodicTask extends TimerTask{
@@ -95,9 +97,10 @@ public class PerfectFailureDetector implements IFailureDetector {
 
 		for(int i = 0; i <= p.getNo(); i++) {
 		    if (i != 0 && i != p.pid) {
-			if (!successfulReplies[i-1]) {
+			if (!successfulReplies[i-1] && !suspectedProcesses[i-1]) {
 			    Utils.out(p.pid,"Process " + i + " is now suspected");
 			    suspectedProcesses[i-1] = true;
+			    isSuspected(i);
 			}
 			 //clear the slot for next time
 			successfulReplies[i-1] = false;

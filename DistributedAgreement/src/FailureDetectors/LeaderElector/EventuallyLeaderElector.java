@@ -36,7 +36,7 @@ public class EventuallyLeaderElector extends EventuallyPerfectFailureDetector {
 	//     sb.append(",");
 	// }
 	// Utils.out(p.pid, sb.toString());
-	for ( int i = p.getNo() ; i > 0 ;  i--){
+	for ( int i = p.getNo() ; i >= p.pid ;  i--){
 	    if (!isSuspect(i)){
 		leader = i;
 		break;
