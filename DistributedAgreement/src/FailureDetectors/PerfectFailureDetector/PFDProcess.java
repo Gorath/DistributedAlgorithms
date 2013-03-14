@@ -30,10 +30,11 @@ public class PFDProcess extends Process{
         String type = m.getType();
 
         if (type.equals(Utils.HEARTBEAT)) {
-            unicast(new Message(pid, m.getSource(), Utils.HEARTBEAT_REPLY, m.getPayload()));
-	} else if (type.equals(Utils.HEARTBEAT_REPLY)) {
-	    faliureDetector.receive(m);	  
-        }
+            faliureDetector.receive(m);	  
+	    //unicast(new Message(pid, m.getSource(), Utils.HEARTBEAT_REPLY, m.getPayload()));
+	} //else if (type.equals(Utils.HEARTBEAT_REPLY)) {
+	    
+	//}
     }
 
     public static void main(String[] args) {
