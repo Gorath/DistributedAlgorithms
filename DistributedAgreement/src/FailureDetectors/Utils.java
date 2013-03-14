@@ -20,7 +20,7 @@ public class Utils {
 	
     public static final int MSG_QUEUE_SIZE = 100;
     public static final int DELAY = 100; /* msec; 1sec = 1000msec */
-    public static final boolean GAUSSIAN = false;
+    public static final boolean GAUSSIAN = true;
 	
     /* For measurement purposes */
     public static final long STEP = 100;
@@ -29,6 +29,7 @@ public class Utils {
 
     /* Message types */
     public static String HEARTBEAT       = "Heartbeat";
+    public static String CONSENSUS       = "consensus";
     public static String HEARTBEAT_REPLY = "Heartbeat-reply";
     public static String LEADER_MESSAGE = "LE-msg";
     public static synchronized void out (String s) {

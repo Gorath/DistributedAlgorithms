@@ -26,12 +26,7 @@ public class EPFDProcess extends Process{
 	public synchronized void receive(Message m) {
 	    String type = m.getType();
 	    if (type.equals(Utils.HEARTBEAT)) {
-		broadcast(Utils.HEARTBEAT_REPLY , m.getPayload()+" "+m.getSource());
-		//unicasts blocks so cant implement using unicast... bradcast the message and drop
-		//messages not meant for us
-		//unicast(new Message(pid, m.getSource(), Utils.HEARTBEAT_REPLY , m.getPayload()));
-	    } else if (type.equals(Utils.HEARTBEAT_REPLY)) {
-	     faliureDetector.receive(m);
+		faliureDetector.receive(m);
 	    }
 	}
 

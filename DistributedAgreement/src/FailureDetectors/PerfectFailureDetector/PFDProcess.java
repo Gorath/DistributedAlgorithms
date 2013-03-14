@@ -2,12 +2,12 @@ package FailureDetectors.PerfectFailureDetector;
 import FailureDetectors.Message;
 import FailureDetectors.Process;
 import FailureDetectors.Utils;
-
+import FailureDetectors.*;
 
 public class PFDProcess extends Process{
     
 
-    PerfectFailureDetector faliureDetector;
+    public IFailureDetector faliureDetector;
 	
 	/**
 	 * PDFProcess constructor
@@ -19,6 +19,7 @@ public class PFDProcess extends Process{
     	super(name,pid,n);
     	faliureDetector = new PerfectFailureDetector(this);
     }
+
     
     public void begin() {
     	faliureDetector.begin();
@@ -29,10 +30,11 @@ public class PFDProcess extends Process{
         String type = m.getType();
 
         if (type.equals(Utils.HEARTBEAT)) {
-            unicast(new Message(pid, m.getSource(), Utils.HEARTBEAT_REPLY, m.getPayload()));
-	} else if (type.equals(Utils.HEARTBEAT_REPLY)) {
-	    faliureDetector.receive(m);	  
-        }
+            faliureDetector.receive(m);	  
+	    //unicast(new Message(pid, m.getSource(), Utils.HEARTBEAT_REPLY, m.getPayload()));
+	} //else if (type.equals(Utils.HEARTBEAT_REPLY)) {
+	    
+	//}
     }
 
     public static void main(String[] args) {

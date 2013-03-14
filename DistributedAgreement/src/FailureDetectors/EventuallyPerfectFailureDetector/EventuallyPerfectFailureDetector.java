@@ -37,6 +37,7 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
      * Constructor for FailureDetectors.PerfectFailureDetector
      * @param p - The process this failure detector belongs to
      */
+    @SuppressWarnings("unchecked")
     public EventuallyPerfectFailureDetector(Process p){
 	this.p = p;
 	t = new Timer();
@@ -76,23 +77,21 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
 	// Get payload information for  heartbeat ID and when heartbeat was sent
 	int heartbeatID = Integer.parseInt(messageParts[0]);
 	long heartbeatTime =  Long.parseLong(messageParts[1]);
-	int messageSource = Integer.parseInt(messageParts[2]);
 
-	if (messageSource != p.pid){ //this message was not meant for us.
-	    return;
-	}
 	
 	// Calculate the delay for the message
-	long delay = time- heartbeatTime;
-
+	long delay = (time- heartbeatTime)*2;
+	
         // If this heartbeat is received in the correct time period
 	if ( heartbeatTime + maxDelays[processID-1] >= time){
          
             // Make note that this process is still active
-            successfulReplies[processID-1] = true;
+	    
+	    successfulReplies[processID-1] = true;
 
 	    //if this process was previously suspected .. unsuspect it
 	    if (suspectedProcesses[processID-1] ){
+		Utils.out(p.pid, "recovered process " + processID);
 		suspectedProcesses[processID-1] = false;
 		getLeader();
 	    } 
@@ -101,12 +100,21 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
 
 	TreeSet<Integer> processTree = missingMessageIDs[processID-1];
 
+	maxDelays[processID -1] = Math.max(maxDelays[processID-1],delay);
+	Utils.out(p.pid,"Reply process " + processID + " delay " + delay + " max " + maxDelays[processID -1]);
+
+	/*******
+		This checks whether all heartbeats are here or not.. if more than 50 hearbeats go missing
+		the process is deemed to be permanently faulty. This is to deal with unstable networks 
+		where messages might arrive out of order or with heavy delays. Using this we are somewhat
+		reliably able to detect if the process is faulty by ensuring that the messages arrive in
+		sequence
+	 *******/
+
 	// If there is a huge delay on the transmission this is still deemed to 
 	// be correct behaviour if all the packets have the same delay (ie they
 	// still arrive in order).  This implies that even if a process is 
 	// 50 times slower than the rest we will still consider it correct
-	maxDelays[processID -1] = Math.max(maxDelays[processID-1],delay);
-	Utils.out(p.pid,"Reply process " + processID + " delay " + delay + " max " + maxDelays[processID -1]);
 
 	// If processTree is null then this is permanently suspected 
 	if (processTree == null) return;  
@@ -119,9 +127,12 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
 	    // This is the case where we have previously missed this ID and it has	 
 	    // come in late
 	    if (processTree.contains(heartbeatID)) {
-		    processTree.remove(heartbeatID);
+		processTree.remove(heartbeatID);
 	    } else {
-		Utils.out(p.pid, "Error removing heartbeat from tree");
+		//this hearbeat has been seen twice.. process faulty.. might have restarted .. 
+		// we should not let restarted processes back in since it can be bad for othe algos.
+		missingMessageIDs[processID-1] = null;
+		getLeader();
 	    }
 	    
 	} else {
@@ -167,7 +178,6 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
 	public void run(){
             
 
-	    boolean suspected = false ;
             // If we have a list of replies from a previous repetition
             // calculate suspected processes
 	    if (started) {
@@ -175,27 +185,16 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
 		for(int i = 0; i <= p.getNo(); i++) {
 		    if (i != 0 && i != p.pid) {
 			if (!successfulReplies[i-1] && !suspectedProcesses[i-1] ) {
-			    //Utils.out(p.pid,"Process " + i + " is now suspected");
-			    suspected = suspectedProcesses[i-1] = true;
+			    Utils.out(p.pid,"Process " + i + " is now suspected");
+			    suspectedProcesses[i-1] = true;
+			    getLeader();
 			}
 			//clear the slot for next time
 			successfulReplies[i-1] = false;
 
-			if (missingMessageIDs[i-1] != null 
-			    && missingMessageIDs[i-1].size() > TOLERANCE) {
-			    missingMessageIDs[i-1] = null;
-			    suspected = true;
-			}
-
 		    }
 		}
 	       
-		//if some process has been suspected .. call getLeader so that 
-		//a new leader can be chosen
-		if (suspected){
-		    getLeader();
-		}
-		    
 	    }
             
 	    started = true;

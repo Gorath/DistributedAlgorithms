@@ -11,7 +11,7 @@ public class PerfectFailureDetector implements IFailureDetector {
 
 
     // The process this failure detector belongs to
-    Process p;
+    public Process p;
     
     // A timer that updates suspected processes
     private Timer t;
@@ -19,11 +19,9 @@ public class PerfectFailureDetector implements IFailureDetector {
     // List to store suspected processes
     private boolean[] suspectedProcesses;
     private boolean[] successfulReplies;
-
     //The time for the last heartbeat
     private long lastHeartbeat = 0;
-    private long req_number = 0;
-
+    private boolean started = false;
     // The interval to send heartbeat messages at
     private static final int interval = 1000;
 
@@ -37,30 +35,25 @@ public class PerfectFailureDetector implements IFailureDetector {
 	int n = p.getNo();
 	suspectedProcesses = new boolean[n];
 	successfulReplies  = new boolean[n];
+	lastHeartbeat = System.currentTimeMillis();
     }
     	
     /* Initiates communication tasks, e.g. sending heartbeats periodically */
     public void begin (){
-    	t.schedule(new PeriodicTask(),0,interval);
+	t.schedule(new PeriodicTask(),0,interval);
     }
 
 
     /* Handles in-coming (heartbeat) messages */
     @Override
     public void receive(Message m){
-    	//Utils.out(p.pid, m.toString());
-	
-	
 	// Get the process ID from the message
 	int processID = m.getSource();
-
-	// Extract the information out of the payload
-	long heartbeatTime = Long.parseLong(m.getPayload());
-
-	//Utils.out(p.pid, "Received heartbeat reply from at time " + (System.currentTimeMillis() - heartbeatTime));
-
+	
+	long timeRecv =System.currentTimeMillis();
+	
         // If this heartbeat is received in the correct time period
-        if (heartbeatTime + 1.1*Utils.DELAY + interval > System.currentTimeMillis()){
+        if (lastHeartbeat + 1.1*Utils.DELAY + interval > timeRecv){
             // Make note that this process is still active
             successfulReplies[processID-1] = true;
 	}
@@ -80,10 +73,11 @@ public class PerfectFailureDetector implements IFailureDetector {
     	return 0;
     }
 	
+
+    
     /* Notifies a blocking thread that ‘process’ has been suspected. 
      * Used only for tasks in §2.1.3 */
     public void isSuspected(Integer process){
-	
     }
 
     class PeriodicTask extends TimerTask{
@@ -91,13 +85,14 @@ public class PerfectFailureDetector implements IFailureDetector {
             
             // If we have a list of replies from a previous repetition
             // calculate suspected processes
-	    if (lastHeartbeat != 0) {
+	    if (started) {
 
 		for(int i = 0; i <= p.getNo(); i++) {
 		    if (i != 0 && i != p.pid) {
-			if (!successfulReplies[i-1]) {
+			if (!successfulReplies[i-1] && !suspectedProcesses[i-1]) {
 			    Utils.out(p.pid,"Process " + i + " is now suspected");
 			    suspectedProcesses[i-1] = true;
+			    isSuspected(i);
 			}
 			 //clear the slot for next time
 			successfulReplies[i-1] = false;
@@ -111,7 +106,7 @@ public class PerfectFailureDetector implements IFailureDetector {
             lastHeartbeat = System.currentTimeMillis();
 	    //Utils.out(p.pid,""+lastHeartbeat);
 	    p.broadcast(Utils.HEARTBEAT,"" + lastHeartbeat);
-	    
+	    started = true;
 	}
     }
     
