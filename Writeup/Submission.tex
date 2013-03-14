@@ -19,46 +19,144 @@ The following document contains the writeup for our Distributed Algorithms Cours
 
 \section{Faliure Detectors}
 
-A {\em faliure detector} is a module that provides to each process a collection of {\em suspected} processes.  Detectors in different process may not agree on which processes are suspected.
+A {\em faliure detector} is a module that provides to each process a collection of {\em suspected} processes.  Suspected processes are processes which are determined to be in a crashed state.  This can happen if a process has crashed or is just slow at sending a response.  Detectors in different process may not agree on which processes are suspected.
 
 \subsection{Degrees of Completeness}
 
-{\bf Strong Completeness}\\ 
-\begin{adjustwidth}{0.5cm}{}
-Every faulty process is eventually permanently suspected by every non-faulty process
-\end{adjustwidth}
-\vspace{3mm}
+Completeness is concerned with detectors correctly suspecting crashed processes.\\
 
 \noindent
-Weak Completeness\\
-\indent 
-Every faulty process is eventually permanently suspected by some non-faulty process
+Strong Completeness - Every faulty process is eventually permanently suspected by every non-faulty process.\\
 
+\noindent
+Weak Completeness - Every faulty process is eventually permanently suspected by some non-faulty process.
 
 \subsection{Degrees of Accuracy}
 
-Strong accuracy - No process is suspected (by anybody) before it crashes
-Weak accuracy Some non-faulty process is never suspected
+Accuracy is concerned with detectors not suspecting correct processes.\\
 
-Eventual Strong Accuracy - After some initial period of confusion, no process is suspected before it crashes.  This means no non-faulty process is suspected after some time, since we can take the end of the initial period of chasos as the time at which the last crash occcurs.
+\noindent
+Strong Accuracy - If a failure detector has strong accuracy then it implies that no process is suspected (by anybody) before it crashes.\\
 
-Evenrtual weak accuracy - After some initial period of confuasion, some non-faulty process is never suspected.
+\noindent
+Weak Accuracy - If a detector has weak accuracy it implies some non-faulty process is never suspected by all processes.\\
+
+\noindent
+Eventual Strong Accuracy - After some initial period of confusion, no process is suspected before it crashes.\\
+
+\noindent
+Evenrtual weak accuracy - After some initial period of confuasion, some non-faulty process is never suspected by any process.
 
 \subsection{Faliure Detector Classes}
 
+\noindent
 Perfect Detector\\
-    Strongly complete and strongly accurate: non-faulty processes are never suspected; faulty processes are eventually suspected by everybody. Easily achieved in synchronous systems.\\ 
-    
+Strongly complete and strongly accurate: non-faulty processes are never suspected; faulty processes are eventually suspected by everybody.\\ 
+
+\noindent    
 Strong detector\\
-    Strongly complete and weakly accurate. The name is misleading if we've already forgotten about weak completeness, but the corresponding W (weak) class is only weakly complete and weakly accurate, so it's the strong completeness that the S is referring to. \\
-    
+Strongly complete and weakly accurate: faulty processes are eventually suspected by everybody; at least one non-faulty process is never suspected by all processes. \\
+
+\noindent    
 Eventually Perfect\\
-    Strongly complete and eventually strongly accurate. \\
+Strongly complete and eventually strongly accurate: after an initial period of chaos, all non-faulty processes are never suspected; faulty processes are eventually suspected by everybody. \\
     
+\noindent
 Eventually Strong\\
-    Strongly complete and eventually weakly accurate.\\
+Strongly complete and eventually weakly accurate: faulty processes are eventually suspected by everybody; after an initial period of chaos, at least one non-faulty process is not suspected by everybody.\\
 
 \newpage
+
+\section{Implementation Stuff}
+
+\subsection{The Perfect Failure Detector}
+
+\subsection{The Eventually Perfect Failure Detector}
+
+\subsection{Leader Election}
+
+\subsection{Consensus with a Strong Failure Detector}
+
+\subsection{Concensus with an Eventually Strong Failure Detector}
+
+
+
+
+\newpage
+
+
+\section{Analysis Tasks}
+
+\subsection{Relationships Between Classes}
+
+A failure detector D is said to emulate another failure detector D' if the outputs of D (ie suspected processes) are also outputs of D' (ie the suspected processes of D are a subset of that suspected by D').  Below we identify the relationships between perfect, eventually perfect, strong and eventually strong detectors.\\
+
+As a side note - all failure detectors we are considering are strongly complete, meaning they must suspect all incorrect processes.  This fact will be used without mention in the relationships stated below, and we will only consider if correct nodes are suspected or not.
+
+\subsubsection{Relationship Between Perfect and Eventually Perfect}
+
+The perfect failure detector is strongly accurate meaning it never suspects incorrect processes. The eventually perfect failure detector is eventually strongly accurate so can suspect correct processes before its confusion period is over.\\
+
+As the set of processes suspected by perfect is always a subset of the processes suspected by eventually perfect, perfect emulates eventually perfect form the definition given above.\\
+
+Conversely,  the eventually perfect detector can incorrectly suspect a correct process during its confusion period, where as the perfect failure detector can never suspect a correct process.  This means that the suspected set for eventually perfect failure detector can have extra items not included in the perfect failure detectors suspected set.  This implies that eventually perfect can not emulate perfect. 
+
+\subsubsection{Relationship Between Perfect and Strong}
+
+Perfect never incorrectly suspects a correct process.  Strong can suspect correct processes as long as all nodes don't suspect at least one correct process, p.\\
+
+This implies that perfect can emulate strong as perfects suspected set is always a subset of the ones suspected by strong.\\
+
+Strong failure detectors can incorrectly suspect correct processes and perfect failure detectors can not.  This means that the set of suspected processes for strong is a superset of that suspected by perfect and therefore it can not be an emulation by the definition above.
+
+\subsubsection{Relationship Between Perfect and Eventually Strong}
+
+Perfect can never incorrectly suspect a process.  Eventually strong can incorrectly suspect correct processes.  Because of this, the suspected processes by perfect is always a subset of that of eventually strong.  This means that the perfect failure detector can emulate eventually strong and eventually strong can not emulate perfect.
+
+\subsubsection{Relationship Between Strong and Eventually Perfect}
+
+The strong detector has the property of weak accuracy, meaning it will not suspect at least one correct process.  Eventually perfect has the propery of eventual strong accuracy, meaning after a time it will not suspect all correct processes.\\
+
+First lets show eventually perfect can’t emulate strong.  Initially eventually perfect can suspect all processes from the eventually stongly accurate property.  The strong detector must not suspect at least one correct process at all times.  This means that the suspects in eventually perfect can contain more elements than the suspected in strong and therefore eventually perfect can not emulate strong.\\
+
+Now to show that strong can not emulate eventually perfect.  After the initial learning period eventually perfect must suspect only the incorrect processes from the eventually storng accuracy property.  After this time strong can still wrongly suspect some correct processes.  This means that the set of suspects for strong contains extra nodes than the set in eventually perfect which means that strong can not emulate eventually perfect.\\
+
+It is interesting to note that after the initial learning period is over for eventually perfect, it becomes equivalent to the perfect detector and therefore can emulate the strong detector after this time.
+
+\subsubsection{Relationship Between Strong and Eventually Strong}
+
+The strong failure detector has the weak accuracy policy, meaning it will never it will never incorrectly suspect one correct process.  The Eventually Strong detector has the eventual weak accuracy policy, meaning that after a time it will never suspect at least one correct process.\\
+
+Strong emulates eventually strong as before the “learning” period is over, say t$_{n}$, eventually strong could suspect all processes while strong has to not suspect at least one non-faulty process from t$_{0}$. After t$_{n}$ eventually strong and strong will suspect all the same processes.  This implies that eventually strong is a superset of strong and therefore strong emulates eventually strong.  We also know that eventually strong can suspect extra processes before this learning period is over so eventually strong does not emulate strong.
+
+\subsubsection{Relationship Between Eventually Perfect and Eventually Strong}
+
+The eventually perfect failure detector is eventually strongly accurate, meaning after an initial time t it does not suspect any correct processes.  Eventually strong is eventually weakly accurate, meaning after an initial time t it does not suspect at least one correct process.  \\
+
+After this time t, we know the set of suspects will include all the incorrect processes (for eventually perfect and eventually strong) and may contain some correct processes in the suspects for eventually strong.  Clearly the list of suspects for eventually perfect is a sub-set of the suspects for eventually strong and this means that eventually perfect emulates eventually strong from the definition.  Eventually strong can not emulate eventually perfect as it is allowed to contain some correct processes, and therefore the set of suspects for eventually strong is not guaranteed to be contained in the set of suspects for eventually perfect.
+
+\subsection{Weak Completeness}
+
+Weak completeness ensures every crashed processes is eventually detected by some correct process.  Using a simple methodology we can use weak completeness to emulate strong completeness. \\
+
+\noindent
+When every node p sends out a broadcast message, it adds its suspect list, susp, into the payload.  When a process receives a message <p,s> it updates its own suspect list as follows:  Susp = Susp $\cup$ s - {p}.\\
+
+\noindent
+We now need to prove this does not violate any of the accuracy properties.\\
+
+\noindent
+Strong Accuracy - no one is ever inaccurate about their suspicions so we never spread any inaccurate data.\\
+
+\noindent
+Weak Accuracy - everyone is accurate about at least one node, p, so no one will ever spread inaccurate information about p.\\
+
+\noindent
+Eventual Strong Accuracy -  Eventually all faulty nodes crash, inaccurate suspicions are undone by removing them from the suspect list (after we receive heartbeats).  No inaccurate data is passed around after the confusion period so the strong accuracy property holds after this time.\\
+
+\noindent
+Eventual Weak Accuracy   - Eventually all faulty nodes crash, and no one detects at least one process, p, after the confusion period.  This means that no inaccurate information is ever spread about p and therefore maintains the eventual weak accuracy property.\\
+
 
 %\subsection{Crap}
 %\begin{equation}
