@@ -32,13 +32,16 @@ public class SFDProcess extends PFDProcess {
 
 
     public synchronized void agree(String x){
-	
+	Utils.out(pid,"x " + x);
 	for ( int i = 1 ; i <= getNo(); i++){
 	    if ( i == pid){
+	        if ( i == 4){
+		    while (true);
+		}
 		broadcast(Utils.CONSENSUS,x);
 	    }
 	    else if (collect(i)){
-		x = buffer[i];
+		x = buffer[i-1];
 	    }
 	    
 	}
@@ -55,11 +58,11 @@ public class SFDProcess extends PFDProcess {
 		Utils.out(pid, "waiting for " + id + " "+ faliureDetector.isSuspect(id));
 		wait();
 	    }catch (InterruptedException e){
-		Utils.out(pid,"interrupted ffs");
+		Utils.out(pid,"interrupted exception");
 	    }
 	}
 	
-	Utils.out(pid,"wait over");
+	Utils.out(pid,"wait over"+ faliureDetector.isSuspect(id) );
 	return buffer[id-1] != null; // message was recieved.. otherwise is suspected
 	
     }
@@ -71,7 +74,8 @@ public class SFDProcess extends PFDProcess {
         p1.begin();
 
 	//consensus
-	p1.agree(args[3]);
+	p1.agree(args[2+p1.pid]);
+	Utils.out(p1.pid, "initial arg " +args[2+p1.pid]);
     }
 
 

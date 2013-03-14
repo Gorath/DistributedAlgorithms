@@ -20,12 +20,9 @@ public class StrongFailureDetector extends PerfectFailureDetector {
      * Used only for tasks in §2.1.3 */
     @Override
     public void isSuspected(Integer process){
-	Utils.out(p.pid ,"is suspected was called" + isSuspect(process));
+	//Utils.out(p.pid ,"is suspected was called" + isSuspect(process));
 	p.suspectChanged();
     }
-
-
-
     
 } 
 
