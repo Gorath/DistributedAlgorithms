@@ -1,0 +1,3 @@
+These were desinged to use ping like symantics to do detect failures.
+
+Absense of non blocking unicasts however meant that for n >= 5 the detectors stopped behaving as expected
