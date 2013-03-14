@@ -84,6 +84,8 @@ stop () {
 #
 # main ($1) ($2) ($3) (...)
 #
+stop
+
 if [ $# -lt 1 ]; then
 	echo $USAGE && exit 1
 else

@@ -11,8 +11,9 @@ JFLAGS = -g -Xlint:unchecked
 	@$(JC) $(JFLAGS) FailureDetectors/EventuallyPerfectFailureDetectorWithReply/*.java	
 	@$(JC) $(JFLAGS) FailureDetectors/LeaderElector/*.java
 	@$(JC) $(JFLAGS) FailureDetectors/StrongFailureDetector/*.java
-JAVAS = $(wildcard FailureDetectors/*.java FailureDetectors/PerfectFailureDetector/*.java FailureDetectors/EventuallyPerfectFailureDetector/*.java FailureDetectors/LeaderElector/*.java FailureDetectors/StrongFailureDetector/*.java FailureDetectors/PerfectFailureDetectorWithReply/*.java FailureDetectors/EventuallyPerfectFailureDetectorWithReply/*.java )
-CLASSES = $(wildcard FailureDetectors/*.class FailureDetectors/PerfectFailureDetector/*.class FailureDetectors/EventuallyPerfectFailureDetector/*.class FailureDetectors/LeaderElector/*.class FailureDetectors/StrongFailureDetector/*.java FailureDetectors/PerfectFailureDetectorWithReply/*.java FailureDetectors/EventuallyPerfectFailureDetectorWithReply/*.java )
+	@$(JC) $(JFLAGS) FailureDetectors/EventuallyStrongFailureDetector/*.java
+JAVAS = $(wildcard FailureDetectors/*.java FailureDetectors/PerfectFailureDetector/*.java FailureDetectors/EventuallyPerfectFailureDetector/*.java FailureDetectors/LeaderElector/*.java FailureDetectors/StrongFailureDetector/*.java FailureDetectors/PerfectFailureDetectorWithReply/*.java FailureDetectors/EventuallyPerfectFailureDetectorWithReply/*.java FailureDetectors/EventuallyStrongFailureDetector/*.java)
+CLASSES = $(wildcard FailureDetectors/*.class FailureDetectors/PerfectFailureDetector/*.class FailureDetectors/EventuallyPerfectFailureDetector/*.class FailureDetectors/LeaderElector/*.class FailureDetectors/StrongFailureDetector/*.java FailureDetectors/PerfectFailureDetectorWithReply/*.java FailureDetectors/EventuallyPerfectFailureDetectorWithReply/*.java FailureDetectors/EventuallyStrongFailureDetector/*.class)
 
 default: classes
 classes: $(JAVAS:.java=.class)

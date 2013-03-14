@@ -110,6 +110,16 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
 	maxDelays[processID -1] = Math.max(maxDelays[processID-1],delay);
 	Utils.out(p.pid,"Reply process " + processID + " delay " + delay + " max " + maxDelays[processID -1]);
 
+	/*******
+		This checks whether all heartbeats are here or not.. if more than 50 hearbeats go missing
+		the process is deemed to be permanently faulty. This is to deal with unstable networks 
+		where messages might arrive out of order or with heavy delays. Using this we are somewhat
+		reliably able to detect if the process is faulty by ensuring that the messages arrive in
+		sequence
+	*******/
+
+
+
 	// If processTree is null then this is permanently suspected 
 	if (processTree == null) return;  
 

@@ -18,17 +18,14 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
 
     // List to store suspected processes
     private boolean[] suspectedProcesses;
-    private boolean[] successfulReplies;
+    /*
+      using an array of ints since can recieve multiple messages in one time window.
+      we will count messages recieved and carry them forwards
+     */
+    private int[] successfulReplies;
     private long[] maxDelays;
 
     private boolean started;
-    private TreeSet<Integer>[] missingMessageIDs;
-    private int[] highestMessageIDRecieved;
-    private int messageID = 1;
-
-    // If this amount of messages are missed by a process we
-    // permanently suspect it
-    private static final int TOLERANCE = 50;
 
     // The interval to send heartbeat messages at
     private static final int interval = 1000;
@@ -43,16 +40,14 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
 	t = new Timer();
 	int n = p.getNo();
 	suspectedProcesses = new boolean[n];
-	successfulReplies  = new boolean[n];
+	successfulReplies  = new int[n];
 	maxDelays  = new long[n];
-	missingMessageIDs = new TreeSet[n];
-	highestMessageIDRecieved = new int[n];
+	
 	started = false;
 
 	//initially all processes have delay as utils.Delay
 	for(int i = 0; i < n ; i ++){
 	    maxDelays[i] = Utils.DELAY;
-	    missingMessageIDs[i] = new TreeSet<Integer>();
 	}
     }
     	
@@ -71,12 +66,8 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
 	
 	long time =  System.currentTimeMillis();
 	
-	String[] messageParts =  m.getPayload().split(" ");
 	
-	
-	// Get payload information for  heartbeat ID and when heartbeat was sent
-	int heartbeatID = Integer.parseInt(messageParts[0]);
-	long heartbeatTime =  Long.parseLong(messageParts[1]);
+	long heartbeatTime =  Long.parseLong(m.getPayload());
 
 	
 	// Calculate the delay for the message
@@ -87,8 +78,9 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
          
             // Make note that this process is still active
 	    
-	    successfulReplies[processID-1] = true;
 
+	    successfulReplies[processID-1] = successfulReplies[processID-1]+1;
+	
 	    //if this process was previously suspected .. unsuspect it
 	    if (suspectedProcesses[processID-1] ){
 		Utils.out(p.pid, "recovered process " + processID);
@@ -98,71 +90,21 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
 
 	}
 
-	TreeSet<Integer> processTree = missingMessageIDs[processID-1];
 	
-	Utils.out(p.pid,"Reply process " + processID + " delay " + delay + " max " + maxDelays[processID -1] + " messageId " + messageID );
+	Utils.out(p.pid,"Reply process " + processID + " delay " + delay/2 + " max " + maxDelays[processID -1]   );
 	maxDelays[processID -1] = Math.max(maxDelays[processID-1],delay);
 
 
-	/*******
-		This checks whether all heartbeats are here or not.. if more than 50 hearbeats go missing
-		the process is deemed to be permanently faulty. This is to deal with unstable networks 
-		where messages might arrive out of order or with heavy delays. Using this we are somewhat
-		reliably able to detect if the process is faulty by ensuring that the messages arrive in
-		sequence
-	 *******/
-
-	// If there is a huge delay on the transmission this is still deemed to 
-	// be correct behaviour if all the packets have the same delay (ie they
-	// still arrive in order).  This implies that even if a process is 
-	// 50 times slower than the rest we will still consider it correct
-
-	// If processTree is null then this is permanently suspected 
-	if (processTree == null) return;  
-
-	if (highestMessageIDRecieved[processID-1] + 1 == heartbeatID ) {
-	// Case where we receive the next message we expect to receive
-	    highestMessageIDRecieved[processID-1]++;
-
-	} else if (highestMessageIDRecieved[processID-1] + 1 > heartbeatID) {
-	    // This is the case where we have previously missed this ID and it has	 
-	    // come in late
-	    Utils.out(p.pid,"latedHeartBeat " + heartbeatID);
-	    if (processTree.contains(heartbeatID)) {
-		processTree.remove(heartbeatID);
-	    } else {
-		//this hearbeat has been seen twice.. process faulty.. might have restarted .. 
-		// we should not let restarted processes back in since it can be bad for othe algos.
-		missingMessageIDs[processID-1] = null;
-		getLeader();
-	    }
-	    
-	} else {
-	    // this is the case where we receive a message ID greater than the one we expect
-	    for (int i = highestMessageIDRecieved[processID-1] + 1; i < heartbeatID; i++) {
-		processTree.add(i);
-		Utils.out(p.pid,"missiing tick" + i);
-	    } 
-
-	    if (processTree.size() > TOLERANCE) {
-		missingMessageIDs[processID-1] = null;
-		getLeader();
-		Utils.out(p.pid, "Process now permanently suspected" + processID);
-	    }
-
-	    highestMessageIDRecieved[processID-1] = heartbeatID;
-	}
-
 
     }
+
+
 	
     /* Returns true if ‘process’ is suspected */
     public boolean isSuspect(Integer process){
-    	return missingMessageIDs[process-1] == null  // case where permanently suspected because of out of order replies
-	    || suspectedProcesses[process-1] // case where longer delay causes suspision - can be recovered still 
-	    || missingMessageIDs[process-1].size() > 0; // case where we are missing heartbeat replies still so can't be assumed correct
+    	return 	     suspectedProcesses[process-1]; 
     }
-	
+    
     /* Returns the next leader of the system; used only for §2.1.2.
      * Or, it should also be used to notify a process if the leader
      * changed.
@@ -187,26 +129,26 @@ public class EventuallyPerfectFailureDetector implements IFailureDetector {
 		Utils.out(p.pid,"timer tick");
 		for(int i = 0; i <= p.getNo(); i++) {
 		    if (i != 0 && i != p.pid) {
-			if (!successfulReplies[i-1] && !suspectedProcesses[i-1] ) {
-			    Utils.out(p.pid,"Process " + i + " is now suspected");
+			if (successfulReplies[i-1] <= 0 && !suspectedProcesses[i-1] ) {
+			    Utils.out(p.pid,"Process " + i + " is now suspected " );
 			    suspectedProcesses[i-1] = true;
 			    getLeader();
 			}
 			//clear the slot for next time
-			successfulReplies[i-1] = false;
-
+			
+			if (successfulReplies[i-1] > 0 ){
+			    successfulReplies[i-1] --;
+			}
+			
 		    }
 		}
-	       Utils.out(p.pid,"timer tick ended");
+		Utils.out(p.pid,"timer tick ended");
 	    }
             
 	    started = true;
 
-	    //Utils.out(p.pid,""+lastHeartbeat);
-	    p.broadcast(Utils.HEARTBEAT,messageID + " " +
-			System.currentTimeMillis());
+	    p.broadcast(Utils.HEARTBEAT,""+ System.currentTimeMillis());
 
-	    messageID++;
 	}
     }
     
