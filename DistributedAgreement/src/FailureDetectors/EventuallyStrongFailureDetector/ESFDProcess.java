@@ -32,7 +32,7 @@ static final String OUTCOME ="es_outcome";
 	buffer_d= new boolean[n];
 	buffer_r_v= new int[n];
 	buffer_r_o= new int[n];
-		vals = new LinkedList<Integer>();
+	vals = new LinkedList<Integer>();
     }
     
     
@@ -52,7 +52,7 @@ static final String OUTCOME ="es_outcome";
 	   String[] parts= m.getPayload().split(SEP);
 	   buffer_d[i] = Boolean.parseBoolean(parts[0]);
 	   buffer_v[i] = parts[1];
-	   buffer_r_o[i] =  Integer.parseInt(parts[2]);
+	   //buffer_r_o[i] =  Integer.parseInt(parts[2]);
 	   notifyAll();
 	}
     }
@@ -77,12 +77,15 @@ static final String OUTCOME ="es_outcome";
 
 
 	    if ( pid == c ) {
-		handleRecv();
+		String v = handleRecv();
+		continue;
+		//the d thing is done in handleRecv
 	    }
-
-	    else if ( /*collect()*/ true ){
-		x = buffer_v[c-1];
-		if (buffer_d[c-1]){
+	    
+	    Cont cont = collect(c);
+	    if ( cont.ret ){
+		x = cont.v;
+		if (cont.d){
 		    Utils.out(pid, "decided " +x );
 		    if ( m  == c ){
 			return;
@@ -97,47 +100,80 @@ static final String OUTCOME ="es_outcome";
 	}
     }
 
-    private synchronized void handleRecv(){
+    private synchronized String handleRecv(){
 	int n = getNo();
 	HashMap<String,Integer> messages =  new HashMap<String,Integer>();
-	ArrayList<Integer> nodes  = new ArraList<Integer>(n);
-	for ( int i = 0 ; i < n-F -1; i++ ){
-	    while( vals.isEmpty() &&  i < getNo()-F -1){
+	ArrayList<Integer> nodes  = new ArrayList<Integer>(n);
+	    A: for ( int i = 0 ; i < n-F -1; i++ ){
+	    while( vals.peek()!= null &&  i < getNo()-F -1){
 		try{
 		    Utils.out(pid,"waiting");
 		    wait();
 		}catch  (InterruptedException e){
 		    Utils.out(pid,"interrupted");
 		}
-L
+		
 		if( i >= n-F-1) {
 		    Utils.out(pid,"breaking out");
-		    break;
+		    break A;
 		} // enough messages have been 
 		//read or enough nodes have gone down
-
-		int index = vals.poll();
 		
+		
+		Integer index = vals.poll();
+		
+		Utils.out(pid , "asjdklsajadlk " +index);
+		
+		nodes.add(index +1 );
+
 		Utils.out( pid, "got a message from "+ index);
+
+		/*
+		  check if processes have become faulty
+		 */
+
+
+
 		String msg = buffer_x[index];
+		
+		Utils.out (pid,msg);
 		if ( messages.containsKey(msg)){
 		    messages.put(msg, messages.get(msg)+1); // increment message counter
 		}else{
-		    messages.put(msg, messages.get); // increment message counter
+		    messages.put(msg,1); // increment message counter
 		}
 		
 	    }
 	}
+	// have read all the values... take the majority
+	
+	String majority  = null;
+	int max = 0;
+	for ( String s : messages.keySet()){
+	    int val = messages.get(s);
+	    if ( val > max){
+		max = val;
+		majority = s;
+	    }
+	}
+
+	Utils.out(pid, "majority " +majority);
+
+	boolean d  =  messages.size() ==1 ;
+	//only one value of x yaay
+	for ( int id : nodes){
+	    unicast(new Message(pid,id,OUTCOME,""+ d + SEP +majority));
+	}
+	
+	return majority;
     }
-    
-
-    
+        
 
 
 
-    public synchronized boolean collect(int id){
-	/*
-	while ( buffer[id-1] == null && !faliureDetector.isSuspect(id)){
+    public synchronized Cont collect(int id){
+	
+	while ( buffer_v[id-1] == null && !faliureDetector.isSuspect(id)){
 	    try{
 		Utils.out(pid, "waiting for " + id + " "+ faliureDetector.isSuspect(id));
 		wait();
@@ -147,13 +183,26 @@ L
 	}
 	
 	Utils.out(pid,"wait over"+ faliureDetector.isSuspect(id) );
-	return buffer[id-1] != null; // message was recieved.. otherwise is suspected
+	
+	Cont cont = new Cont();
+	cont.v = buffer_v[id-1];
+	cont.d = buffer_d[id-1];
+	cont.ret = buffer_v[id-1] != null;
+	return cont;
+	// message was recieved.. otherwise is suspected
 
-	*/
-	return true;
+	
+     }
+
+
+    private class Cont{
+	String v ;
+	boolean d;
+	boolean ret;
     }
 
-   
+
+
     public static void main(String[] args) {
         ESFDProcess p1 = new ESFDProcess(args[0],Integer.parseInt(args[1]),Integer.parseInt(args[2]));
         p1.registeR();
@@ -164,5 +213,5 @@ L
 	Utils.out(p1.pid, "initial arg " +args[2+p1.pid]);
     }
 
-
+    
 }
