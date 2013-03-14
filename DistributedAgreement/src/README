@@ -1,0 +1,6 @@
+the processes can be launched as
+
+
+./sysmanager start FailureDetector/<PACKAGENAME>/<CLASS NAME>
+
+For the last two parts n processes expect n arguments on  the command line and the ith process will use the ith argument as the initial value for x
